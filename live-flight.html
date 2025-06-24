@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Flight - Condor Virtual</title>
+  <link rel="icon" href="images/condor.png" type="image/png" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f7f7f7;
+      overflow: hidden;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.3rem;
+      align-items: center;
+      background-color: #003366;
+      padding: 1rem 2rem;
+      color: white;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+    }
+
+    .logo img {
+      height: 40px;
+      vertical-align: middle;
+    }
+    .logo span {
+      margin-left: 8px;
+      font-weight: bold;
+      font-size: 1.5rem;
+      color: white;
+      vertical-align: middle;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+      padding-left: 0;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      border-radius: 10px;
+      padding: 0.3rem 0.6rem;
+      transition: background 0.3s;
+    }
+
+    .nav-links a:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .lang-flags {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .lang-flags img {
+      width: 28px;
+      height: 20px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: transform 0.2s, border 0.2s, opacity 0.2s;
+      opacity: 0.6;
+    }
+
+    .lang-flags img.selected {
+      transform: scale(1.25);
+      border: 2px solid #ffcc00;
+      opacity: 1;
+    }
+
+    .lang-flags img:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      opacity: 1;
+    }
+
+    .right-buttons {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .apply-btn {
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #scrollable-container {
+      position: relative;
+      height: calc(100vh - var(--navbar-height, 68px));
+      margin-top: var(--navbar-height, 68px);
+      overflow-y: auto;
+      color: #003366;
+      text-shadow: 1px 1px 5px rgba(148, 148, 148, 0.7);
+      padding: 3rem 2rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    #scrollable-container::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("images/main.jpg");
+      background-size: cover;
+      background-position: center;
+      filter: blur(6px);
+      opacity: 0.6;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    #scrollable-container > * {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+    }
+
+    #map {
+      width: 100%;
+      height: 500px;
+      margin-top: 2rem;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    #scrollable-container::-webkit-scrollbar {
+      width: 12px;
+      background: transparent;
+    }
+    #scrollable-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #scrollable-container::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      background-color: #ffcc00;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+    #scrollable-container::-webkit-scrollbar-thumb:hover {
+      background-color: #d4ac00;
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">
+      <img src="images/condor.png" alt="Condor Virtual Logo">
+      <span>Condor Virtual</span>
+    </div>    
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html" data-translate="home">Home</a></li>
+        <li><a href="live-flight.html" data-translate="live">Live Flight</a></li>
+        <li><a href="fleet.html" data-translate="fleet">Fleet</a></li>
+        <li><a href="about.html" data-translate="about">About</a></li>
+        <li><a href="contact.html" data-translate="contact">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="right-buttons">
+      <button class="apply-btn" data-translate="apply">I Apply</button>
+      <div class="lang-flags">
+        <img src="images/flags/gb.png" alt="English" data-lang="en" />
+        <img src="images/flags/fr.png" alt="Français" data-lang="fr" />
+        <img src="images/flags/de.png" alt="Deutsch" data-lang="de" />
+      </div>
+    </div>
+  </header>
+
+  <div id="scrollable-container">
+    <h1 data-translate="live">Live Flight</h1>
+    <p data-translate="live_content">Track our virtual flights in real-time. Live radar integration coming soon!</p>
+    <div id="map"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const translations = {
+      en: {
+        home: "Home",
+        live: "Live Flight",
+        fleet: "Fleet",
+        about: "About",
+        contact: "Contact",
+        apply: "I Apply",
+        live_content: "Track our virtual flights in real-time. Live radar integration coming soon!"
+      },
+      fr: {
+        home: "Accueil",
+        live: "Vol en direct",
+        fleet: "Flotte",
+        about: "À propos",
+        contact: "Contact",
+        apply: "Je postule",
+        live_content: "Suivez nos vols virtuels en temps réel. Intégration du radar à venir !"
+      },
+      de: {
+        home: "Startseite",
+        live: "Live-Flug",
+        fleet: "Flotte",
+        about: "Über uns",
+        contact: "Kontakt",
+        apply: "Ich bewerbe mich",
+        live_content: "Verfolge unsere virtuellen Flüge in Echtzeit. Radar kommt bald!"
+      }
+    };
+
+    function updateLanguage(lang) {
+      localStorage.setItem("preferredLang", lang);
+      document.querySelectorAll("[data-translate]").forEach(el => {
+        const key = el.getAttribute("data-translate");
+        if (translations[lang] && translations[lang][key]) {
+          el.textContent = translations[lang][key];
+        }
+      });
+      document.querySelectorAll(".lang-flags img").forEach(i => i.classList.remove("selected"));
+      const selectedImg = document.querySelector(`.lang-flags img[data-lang="${lang}"]`);
+      if (selectedImg) selectedImg.classList.add("selected");
+    }
+
+    document.querySelectorAll(".lang-flags img").forEach(img => {
+      img.addEventListener("click", () => updateLanguage(img.dataset.lang));
+    });
+
+    window.addEventListener('load', () => {
+      const savedLang = localStorage.getItem("preferredLang") || "en";
+      updateLanguage(savedLang);
+
+      const map = L.map('map').setView([50, 10], 2);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      const destinations = [
+  { city: "St John's", coords: [17.1274, -61.8468] },               // Antigua and Barbuda
+  { city: "Yerevan", coords: [40.1475, 44.3957] },                 // Armenia
+  { city: "Klagenfurt", coords: [46.6427, 14.3376] },              // Austria
+  { city: "Vienna", coords: [48.1103, 16.5697] },                  // Austria
+  { city: "Manama", coords: [26.2708, 50.6336] },                  // Bahrain
+  { city: "Christ Church", coords: [13.0746, -59.4924] },          // Barbados
+  { city: "Fortaleza", coords: [-3.7769, -38.5320] },              // Brazil
+  { city: "Recife", coords: [-8.1267, -34.9236] },                 // Brazil
+  { city: "Rio de Janeiro", coords: [-22.8090, -43.2506] },        // Brazil
+  { city: "Salvador da Bahia", coords: [-12.9086, -38.3226] },     // Brazil
+  { city: "Burgas", coords: [42.5696, 27.5159] },                  // Bulgaria
+  { city: "Varna", coords: [43.2324, 27.8251] },                   // Bulgaria
+  { city: "Siem Reap", coords: [13.4100, 103.8133] },              // Cambodia
+  { city: "Calgary", coords: [51.1139, -114.0208] },               // Canada
+  { city: "Edmonton", coords: [53.3090, -113.5806] },              // Canada
+  { city: "Halifax", coords: [44.8802, -63.5150] },                // Canada
+  { city: "Toronto", coords: [43.6777, -79.6306] },                // Canada (Pearson)
+  { city: "Vancouver", coords: [49.1951, -123.1779] },             // Canada
+  { city: "Whitehorse", coords: [60.7090, -135.0674] },            // Canada
+  { city: "Dubrovnik", coords: [42.5613, 18.2685] },               // Croatia
+  { city: "Rijeka", coords: [45.2163, 14.5701] },                  // Croatia
+  { city: "Split", coords: [43.5384, 16.2989] },                   // Croatia
+  { city: "Zadar", coords: [44.1111, 15.3470] },                   // Croatia
+  { city: "Willemstad", coords: [12.5026, -69.9840] },             // Curaçao
+  { city: "Larnaca", coords: [34.8758, 33.6244] },                 // Cyprus
+  { city: "Paphos", coords: [34.7119, 32.4850] },                  // Cyprus
+  { city: "Prague", coords: [50.1008, 14.2646] },                  // Czech Republic
+  { city: "La Romana", coords: [18.4333, -68.9733] },              // Dominican Republic
+  { city: "Puerto Plata", coords: [19.7572, -70.5708] },           // Dominican Republic
+  { city: "Punta Cana", coords: [18.5703, -68.3630] },             // Dominican Republic
+  { city: "Santo Domingo", coords: [18.4294, -69.6684] },          // Dominican Republic
+  { city: "Giza", coords: [29.9765, 31.1313] },                    // Egypt (approx Giza)
+  { city: "Hurghada", coords: [27.1782, 33.7999] },                // Egypt
+  { city: "Marsa Alam", coords: [25.0743, 34.6558] },              // Egypt
+  { city: "Sharm El Sheikh", coords: [27.9774, 34.3956] },         // Egypt
+  { city: "Tbilisi", coords: [41.6692, 44.9545] },                 // Georgia
+  { city: "Berlin", coords: [52.3667, 13.5033] },                   // Germany (Brandenburg)
+  { city: "Bremen", coords: [53.0473, 8.7871] },                   // Germany
+  { city: "Cologne/Bonn", coords: [50.8659, 7.1427] },             // Germany
+  { city: "Dresden", coords: [51.1320, 13.7671] },                 // Germany
+  { city: "Düsseldorf", coords: [51.2895, 6.7668] },               // Germany
+  { city: "Frankfurt", coords: [50.0379, 8.5622] },                // Germany
+  { city: "Hamburg", coords: [53.6304, 9.9882] },                  // Germany
+  { city: "Hanover", coords: [52.4617, 9.6856] },                  // Germany
+  { city: "Leipzig/Halle", coords: [51.4239, 12.2367] },           // Germany
+  { city: "Munich", coords: [48.3538, 11.7861] },                  // Germany
+  { city: "Nuremberg", coords: [49.4986, 11.0804] },               // Germany
+  { city: "Paderborn", coords: [51.6149, 8.6166] },                // Germany
+  { city: "Stuttgart", coords: [48.6898, 9.2208] },                // Germany
+  { city: "Sylt", coords: [54.9133, 8.3358] },                     // Germany
+  { city: "Chania", coords: [35.5314, 24.1492] },                  // Greece
+  { city: "Corfu", coords: [39.6014, 19.9114] },                   // Greece
+  { city: "Heraklion", coords: [35.3387, 25.1803] },               // Greece
+  { city: "Kalamata", coords: [37.0381, 22.1141] },                // Greece
+  { city: "Karpathos", coords: [35.4822, 27.1452] },               // Greece
+  { city: "Kavala", coords: [40.9178, 24.4010] },                  // Greece
+  { city: "Kefalonia", coords: [38.1750, 20.5000] },               // Greece
+  { city: "Kos", coords: [36.7931, 27.0916] },                     // Greece
+  { city: "Mykonos", coords: [37.4357, 25.3483] },                 // Greece
+  { city: "Preveza/Lefkada", coords: [38.9000, 20.7500] },         // Greece
+  { city: "Rhodes", coords: [36.4056, 28.0869] },                  // Greece
+  { city: "Samos", coords: [37.6844, 26.9125] },                   // Greece
+  { city: "Santorini", coords: [36.4067, 25.4569] },               // Greece
+  { city: "Sitia", coords: [35.2100, 26.1010] },                   // Greece
+  { city: "Skiathos", coords: [39.1821, 23.4855] },                // Greece
+  { city: "Thessaloniki", coords: [40.5196, 22.9708] },            // Greece
+  { city: "Volos", coords: [39.2200, 22.6880] },                   // Greece
+  { city: "Zakynthos", coords: [37.7500, 20.9000] },               // Greece
+  { city: "St. George's", coords: [12.0041, -61.7861] },           // Grenada
+  { city: "Pointe-à-Pitre", coords: [16.2650, -61.5500] },         // Guadeloupe
+  { city: "Goa", coords: [15.3800, 73.8295] },                     // India
+  { city: "Cagliari", coords: [39.2514, 9.0547] },                 // Italy
+  { city: "Catania", coords: [37.4667, 15.0667] },                 // Italy
+  { city: "Comiso", coords: [37.0333, 14.5333] },                  // Italy
+  { city: "Genoa", coords: [44.4132, 8.8376] },                    // Italy
+  { city: "Lamezia Terme", coords: [38.9053, 16.2422] },           // Italy
+  { city: "Naples", coords: [40.8860, 14.2908] },                  // Italy
+  { city: "Olbia", coords: [40.8997, 9.5170] },                    // Italy
+  { city: "Sulaymaniyah", coords: [35.5600, 45.4300] },            // Iraq
+  { city: "Montego Bay", coords: [18.5036, -77.9137] },            // Jamaica
+  { city: "Mombasa", coords: [-4.0345, 39.5940] },                 // Kenya
+  { city: "Nairobi", coords: [-1.3192, 36.9275] },                 // Kenya
+  { city: "Pristina", coords: [42.5726, 21.0355] },                // Kosovo
+  { city: "Beirut", coords: [33.8200, 35.4884] },                  // Lebanon
+  { city: "Kuala Lumpur", coords: [2.7456, 101.7072] },            // Malaysia
+  { city: "Gan", coords: [-0.6942, 73.1557] },                     // Maldives
+  { city: "Malé", coords: [4.1910, 73.5298] },                     // Maldives
+  { city: "Valletta", coords: [35.8575, 14.4770] },                // Malta
+  { city: "Fort-de-France", coords: [14.5908, -61.0035] },         // Martinique
+  { city: "Port Louis", coords: [-20.4300, 57.6836] },             // Mauritius
+  { city: "Cancún", coords: [21.0360, -86.8748] },                 // Mexico
+  { city: "San José del Cabo", coords: [23.1517, -109.7217] },     // Mexico
+  { city: "Tivat", coords: [42.4042, 18.7231] },                   // Montenegro
+  { city: "Agadir", coords: [30.3231, -9.4131] },                  // Morocco
+  { city: "Marrakesh", coords: [31.6065, -8.0353] },               // Morocco
+  { city: "Yangon", coords: [16.9071, 96.1330] },                  // Myanmar
+  { city: "Windhoek", coords: [-22.4813, 17.4641] },               // Namibia
+  { city: "Panama City", coords: [9.0718, -79.3839] },             // Panama
+  { city: "Faro", coords: [37.0145, -7.9659] },                    // Portugal
+  { city: "Funchal", coords: [32.6957, -16.7741] },                // Portugal
+  { city: "Porto Santo", coords: [33.0732, -16.3500] },            // Portugal
+  { city: "San Juan", coords: [18.4394, -66.0024] },               // Puerto Rico
+  { city: "Constanța", coords: [44.3154, 28.6014] },               // Romania
+  { city: "Sochi", coords: [43.4499, 39.9566] },                   // Russia
+  { city: "Mahé", coords: [-4.6743, 55.5215] },                    // Seychelles
+  { city: "Cape Town", coords: [-33.9698, 18.5976] },              // South Africa
+  { city: "Arrecife", coords: [28.9456, -13.6056] },               // Spain
+  { city: "Fuerteventura", coords: [28.4524, -13.8633] },          // Spain
+  { city: "Ibiza", coords: [38.8729, 1.3731] },                    // Spain
+  { city: "Jerez de la Frontera", coords: [36.7446, -6.0609] },    // Spain
+  { city: "Las Palmas", coords: [27.9310, -15.3860] },             // Spain
+  { city: "Málaga", coords: [36.6749, -4.4993] },                  // Spain
+  { city: "Menorca", coords: [39.8653, 4.2181] },                  // Spain
+  { city: "Palma de Mallorca", coords: [39.5511, 2.7386] },        // Spain
+  { city: "Santa Cruz de La Palma", coords: [28.6774, -17.7640] }, // Spain
+  { city: "Tenerife", coords: [28.0424, -16.5725] },               // Spain
+  { city: "Colombo", coords: [7.1810, 79.8840] },                  // Sri Lanka
+  { city: "Vieux Fort", coords: [13.7167, -60.9500] },             // St Lucia
+  { city: "Zurich", coords: [47.4647, 8.5491] },                   // Switzerland
+  { city: "Kilimanjaro", coords: [-3.4297, 37.0746] },             // Tanzania
+  { city: "Zanzibar", coords: [-6.2233, 39.1970] },                // Tanzania
+  { city: "Bangkok", coords: [13.6811, 100.7473] },                // Thailand
+  { city: "Phuket", coords: [8.1132, 98.3164] },                   // Thailand
+  { city: "Scarborough", coords: [10.5896, -61.2500] },            // Trinidad and Tobago
+  { city: "Djerba", coords: [33.8754, 10.7757] },                  // Tunisia
+  { city: "Enfidha", coords: [36.0736, 10.4126] },                 // Tunisia
+  { city: "Monastir", coords: [35.7616, 10.8115] },                // Tunisia
+  { city: "Antalya", coords: [36.9000, 30.8000] },                 // Turkey
+  { city: "Bodrum", coords: [37.0353, 27.6827] },                  // Turkey
+  { city: "Dalaman", coords: [36.7131, 28.7928] },                 // Turkey
+  { city: "İzmir", coords: [38.2926, 27.1569] },                   // Turkey
+  { city: "Dubai", coords: [25.2532, 55.3657] },                   // UAE
+  { city: "Sharjah", coords: [25.3284, 55.5171] },                 // UAE
+  { city: "Anchorage", coords: [61.1743, -149.9963] },             // USA
+  { city: "Boston", coords: [42.3656, -71.0096] },                 // USA
+  { city: "Las Vegas", coords: [36.0860, -115.1517] },             // USA
+  { city: "Los Angeles", coords: [33.9425, -118.4081] },           // USA
+  { city: "Miami", coords: [25.7932, -80.2906] },                  // USA
+  { city: "New York City", coords: [40.6413, -73.7781] },          // USA
+  { city: "Portland", coords: [45.5887, -122.5975] },              // USA
+  { city: "San Francisco", coords: [37.6189, -122.3750] },         // USA
+  { city: "Seattle", coords: [47.4480, -122.3093] }                // USA
+];
+
+
+      destinations.forEach(dest => {
+        L.circleMarker(dest.coords, {
+          radius: 6,
+          fillColor: "#ffcc00",
+          color: "#fff",
+          weight: 1,
+          fillOpacity: 0.9
+        }).bindPopup(dest.city).addTo(map);
+      });
+    });
+
+    function updateNavbarHeight() {
+      const navbar = document.querySelector('.navbar');
+      const height = navbar.offsetHeight;
+      document.documentElement.style.setProperty('--navbar-height', height + 'px');
+    }
+
+    window.addEventListener('resize', updateNavbarHeight);
+    window.addEventListener('load', updateNavbarHeight);
+  </script>
+</body>
+</html>

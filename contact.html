@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title data-translate="contact_title">Condor Virtual - Contact</title>
+  <link rel="icon" href="images/condor.png" type="image/png" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f7f7f7;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.3rem;
+      align-items: center;
+      background-color: #003366;
+      padding: 1rem 2rem;
+      color: white;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+    }
+
+    .logo img {
+      height: 40px;
+      vertical-align: middle;
+    }
+    .logo span {
+      margin-left: 8px;
+      font-weight: bold;
+      font-size: 1.5rem;
+      color: white;
+      vertical-align: middle;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+      padding-left: 0;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      border-radius: 10px;
+      padding: 0.3rem 0.6rem;
+      transition: background 0.3s;
+    }
+
+    .nav-links a:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .lang-flags {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .lang-flags img {
+      width: 28px;
+      height: 20px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: transform 0.2s, border 0.2s, opacity 0.2s;
+      opacity: 0.6;
+    }
+
+    .lang-flags img.selected {
+      transform: scale(1.25);
+      border: 2px solid #ffcc00;
+      opacity: 1;
+    }
+
+    .lang-flags img:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      opacity: 1;
+    }
+
+    #scrollable-container {
+      position: relative;
+      height: calc(100vh - var(--navbar-height, 68px));
+      margin-top: var(--navbar-height, 68px);
+      overflow-y: auto;
+      color: #003366;
+      text-shadow: 1px 1px 5px rgba(255, 255, 255, 0.7);
+      padding: 2rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      text-align: center;
+    }
+
+    #scrollable-container::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-image: url("images/main.jpg");
+      background-size: cover;
+      background-position: center;
+      filter: blur(6px);
+      opacity: 0.6;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Chrome, Edge, Safari */
+    ::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    /* Firefox */
+    body {
+      scrollbar-width: none; /* Firefox */
+    }
+
+
+    #scrollable-container > * {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    form {
+      background: rgba(255 255 255 / 0.9);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      text-align: left;
+      color: #003366;
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+      font-size: 1.1rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+      font-weight: 400;
+      resize: vertical;
+    }
+
+    textarea {
+      min-height: 120px;
+    }
+
+    /* Bouton "Je postule" (en haut à droite) */
+    .apply-btn {
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Bouton "Envoyer" dans le formulaire */
+    button.submit-btn {
+      background-color: #003366;
+      border: none;
+      border-radius: 12px;
+      padding: 0.9rem 2rem;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #ffcc00;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 51, 102, 0.6);
+      display: inline-block;
+      width: 100%;
+      max-width: 200px;
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+
+    button.submit-btn:hover,
+    button.submit-btn:focus {
+      background-color: #00509e;
+      color: #fff200;
+      box-shadow: 0 6px 12px rgba(0, 80, 158, 0.8);
+      outline: none;
+    }
+
+    #form-message {
+      margin-top: 1rem;
+      font-weight: 600;
+    }
+
+    .right-buttons {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">
+      <img src="images/condor.png" alt="Condor Virtual Logo" />
+      <span>Condor Virtual</span>
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html" data-translate="home">Home</a></li>
+        <li><a href="live-flight.html" data-translate="live">Live Flight</a></li>
+        <li><a href="fleet.html" data-translate="fleet">Fleet</a></li>
+        <li><a href="about.html" data-translate="about">About</a></li>
+        <li><a href="contact.html" data-translate="contact">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="right-buttons">
+      <button class="apply-btn" data-translate="apply">I Apply</button>
+      <div class="lang-flags">
+        <img src="images/flags/gb.png" alt="English" data-lang="en" />
+        <img src="images/flags/fr.png" alt="Français" data-lang="fr" />
+        <img src="images/flags/de.png" alt="Deutsch" data-lang="de" />
+      </div>
+    </div>
+  </header>
+
+  <div id="scrollable-container">
+    <h1 data-translate="contact_title">Contact Us</h1>
+    <form action="https://api.web3forms.com/submit" method="POST">
+      <input type="hidden" name="access_key" value="150fd889-85ed-49fc-85c5-3e522a559d51">
+      <label for="firstname" data-translate="label_firstname">First Name</label>
+      <input type="text" id="firstname" name="firstname" required minlength="2" />
+
+      <label for="lastname" data-translate="label_lastname">Last Name</label>
+      <input type="text" id="lastname" name="lastname" required minlength="2" />
+
+      <label for="email" data-translate="label_email">Email</label>
+      <input type="email" id="email" name="email" required />
+
+      <label for="country" data-translate="label_country">Country</label>
+      <select id="country" name="country" required>
+        <option value="France" data-translate="country_france">France</option>
+        <option value="Germany" data-translate="country_germany">Germany</option>
+        <option value="United Kingdom" data-translate="country_uk">United Kingdom</option>
+      </select>
+
+      <label for="subject" data-translate="label_subject">Subject</label>
+      <input id="subject" name="subject" required minlength="4"></textarea>
+
+      <label for="reason" data-translate="reason">Reason</label>
+      <textarea id="reason" name="reason" required minlength="10"></textarea>
+
+      <button type="submit" class="submit-btn" data-translate="send">Send</button>
+    </form>
+    <div id="form-message"></div>
+  </div>
+
+  <script>
+    const translations = {
+      en: {
+        home: "Home",
+        live: "Live Flight",
+        fleet: "Fleet",
+        about: "About",
+        contact: "Contact",
+        apply: "I Apply",
+        contact_title: "Contact Us",
+        label_firstname: "First Name",
+        label_lastname: "Last Name",
+        label_email: "Email",
+        label_country: "Country",
+        country_france: "France",
+        country_germany: "Germany",
+        country_uk: "United Kingdom",
+        label_subject: "Subject",
+        send: "Send",
+        reason: "Reason"
+      },
+      fr: {
+        home: "Accueil",
+        live: "Vol en direct",
+        fleet: "Flotte",
+        about: "À propos",
+        contact: "Contact",
+        apply: "Je postule",
+        contact_title: "Contactez-nous",
+        label_firstname: "Prénom",
+        label_lastname: "Nom",
+        label_email: "Email",
+        label_country: "Pays",
+        country_france: "France",
+        country_germany: "Allemagne",
+        country_uk: "Royaume-Uni",
+        label_subject: "Sujet",
+        send: "Envoyer",
+        reason: "Raison"
+      },
+      de: {
+        home: "Startseite",
+        live: "Live Flug",
+        fleet: "Flotte",
+        about: "Über uns",
+        contact: "Kontakt",
+        apply: "Ich bewerbe mich",
+        contact_title: "Kontaktieren Sie uns",
+        label_firstname: "Vorname",
+        label_lastname: "Nachname",
+        label_email: "Email",
+        label_country: "Land",
+        country_france: "Frankreich",
+        country_germany: "Deutschland",
+        country_uk: "Vereinigtes Königreich",
+        label_subject: "Betreff",
+        send: "Senden",
+        reason: "Grund"
+      }
+    };
+
+    let currentLang = localStorage.getItem('lang') || 'en';
+
+    function translatePage() {
+      document.querySelectorAll('[data-translate]').forEach(el => {
+        const key = el.getAttribute('data-translate');
+        if (translations[currentLang] && translations[currentLang][key]) {
+          el.textContent = translations[currentLang][key];
+        }
+      });
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('lang', lang);
+      translatePage();
+      updateSelectedFlag();
+    }
+
+    function updateSelectedFlag() {
+      document.querySelectorAll('.lang-flags img').forEach(img => {
+        img.classList.toggle('selected', img.getAttribute('data-lang') === currentLang);
+      });
+    }
+
+    document.querySelectorAll('.lang-flags img').forEach(img => {
+      img.addEventListener('click', () => {
+        setLanguage(img.getAttribute('data-lang'));
+      });
+    });
+
+    window.addEventListener('load', () => {
+      translatePage();
+      updateSelectedFlag();
+    });
+
+    // Calcul dynamique de la hauteur de la navbar et application de la variable CSS
+    function updateNavbarHeight() {
+      const navbar = document.querySelector('.navbar');
+      if (!navbar) return;
+      const height = navbar.offsetHeight;
+      document.documentElement.style.setProperty('--navbar-height', height + 'px');
+    }
+    window.addEventListener('resize', updateNavbarHeight);
+    window.addEventListener('load', updateNavbarHeight);
+  </script>
+</body>
+</html>

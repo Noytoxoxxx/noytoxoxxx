@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Condor Virtual</title>
+  <link rel="icon" href="images/condor.png" type="image/png" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f7f7f7;
+      overflow: hidden; /* Pas de scroll global */
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.3rem;
+      align-items: center;
+      background-color: #003366;
+      padding: 1rem 2rem;
+      color: white;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+    }
+
+    /* Conteneur scrollable avec fond flou, taille calculée */
+    #scrollable-container {
+      position: relative;
+      height: calc(100vh - var(--navbar-height, 68px));
+      margin-top: var(--navbar-height, 68px);
+      overflow-y: auto;
+      color: #003366;
+      text-shadow: 1px 1px 5px rgba(143, 143, 143, 0.7);
+      padding: 2rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* Fond flou */
+    #scrollable-container::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("images/main.jpg");
+      background-size: cover;
+      background-position: center;
+      filter: blur(6px);
+      opacity: 0.6;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Contenu au-dessus */
+    #scrollable-container > * {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+    }
+
+    /* Scrollbar personnalisée */
+    #scrollable-container::-webkit-scrollbar {
+      width: 12px;
+      background: transparent;
+    }
+
+    #scrollable-container::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 10px;
+      -webkit-box-shadow: none;
+    }
+
+    #scrollable-container::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+      background-color: #ffcc00;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+      transition: background 0.3s;
+    }
+
+    #scrollable-container::-webkit-scrollbar-thumb:hover {
+      background-color: #d4ac00;
+    }
+
+    .logo img {
+      height: 40px;
+      vertical-align: middle;
+    }
+    .logo span {
+      margin-left: 8px;
+      font-weight: bold;
+      font-size: 1.5rem;
+      color: white;
+      vertical-align: middle;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+      padding-left: 0;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      border-radius: 10px;
+      padding: 0.3rem 0.6rem;
+      transition: background 0.3s;
+    }
+
+    .nav-links a:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .lang-flags {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .lang-flags img {
+      width: 28px;
+      height: 20px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: transform 0.2s, border 0.2s, opacity 0.2s;
+      opacity: 0.6;
+    }
+
+    .lang-flags img.selected {
+      transform: scale(1.25);
+      border: 2px solid #ffcc00;
+      opacity: 1;
+    }
+
+    .lang-flags img:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      opacity: 1;
+    }
+
+    .right-buttons {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .apply-btn {
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #lang-select {
+      padding: 0.3rem;
+      border-radius: 8px;
+      border: none;
+    }
+
+    /* Styles widgets container */
+    #widgets-container {
+      display: flex;
+      gap: 2rem;
+      margin-top: 2rem;
+      max-width: 900px;
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap; /* Permet de passer en colonne sur petits écrans */
+    }
+
+    #news-widget, #discord-widget {
+      flex: 1 1 400px; /* Base 400px, peut rétrécir ou s’agrandir */
+      background: rgba(0,0,0,0.3);
+      padding: 1rem;
+      border-radius: 10px;
+      color: white;
+      text-align: left;
+      box-sizing: border-box;
+      min-width: 300px; /* Ne pas trop rétrécir */
+    }
+
+    #news-widget h2, #discord-widget h2 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+
+    #news-list {
+      list-style: disc inside;
+      padding-left: 1rem;
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">
+      <img src="images/condor.png" alt="Condor Virtual Logo" style="height: 40px; vertical-align: middle;">
+      <span>Condor Virtual</span>
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html" data-translate="home">Home</a></li>
+        <li><a href="live-flight.html" data-translate="live">Live Flight</a></li>
+        <li><a href="fleet.html" data-translate="fleet">Fleet</a></li>
+        <li><a href="about.html" data-translate="about">About</a></li>
+        <li><a href="contact.html" data-translate="contact">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="right-buttons">
+      <button class="apply-btn" data-translate="apply">I Apply</button>
+      <div class="lang-flags">
+        <img src="images/flags/gb.png" alt="English" data-lang="en" />
+        <img src="images/flags/fr.png" alt="Français" data-lang="fr" />
+        <img src="images/flags/de.png" alt="Deutsch" data-lang="de" />
+      </div>
+    </div>
+  </header>
+
+  <div id="scrollable-container">
+    <h1 data-translate="welcome">Welcome to Condor Virtual</h1>
+    <p data-translate="description">Your gateway to virtual aviation excellence.</p>
+
+    <div id="widgets-container">
+      <div id="news-widget">
+        <h2 data-translate="news_title">Nouveautés de la semaine</h2>
+        <ul id="news-list"></ul>
+      </div>
+
+      <a href="https://discord.gg/s2zn3rF6xJ" target="_blank" style="display: inline-block;">
+    <iframe
+        src="https://discord.com/widget?id=1337862978799800472&theme=dark"
+        width="350"
+        height="500"
+        allowtransparency="true"
+        frameborder="0"
+        style="pointer-events: none;" 
+    ></iframe>
+      </a>
+
+  <script>
+    const translations = {
+      en: {
+        home: "Home",
+        live: "Live Flight",
+        fleet: "Fleet",
+        about: "About",
+        contact: "Contact",
+        apply: "I Apply",
+        welcome: "Welcome to Condor Virtual",
+        description: "Your gateway to virtual aviation excellence.",
+        news_title: "News of the Week",
+        news_items: [
+          "New special flight to New York added.",
+          "Updated Airbus A320 model with new textures.",
+          "Summer season registration now open.",
+          "New real-time weather feature activated."
+        ],
+        discord_title: "Our Discord Server"
+      },
+      fr: {
+        home: "Accueil",
+        live: "Vol en direct",
+        fleet: "Flotte",
+        about: "À propos",
+        contact: "Contact",
+        apply: "Je postule",
+        welcome: "Bienvenue chez Condor Virtual",
+        description: "Votre passerelle vers l'excellence de l'aviation virtuelle.",
+        news_title: "Nouveautés de la semaine",
+        news_items: [
+          "Nouveau vol spécial vers New York ajouté.",
+          "Mise à jour du modèle Airbus A320 avec nouvelles textures.",
+          "Ouverture des inscriptions pour la saison d'été.",
+          "Nouvelle fonctionnalité de météo en temps réel activée."
+        ],
+        discord_title: "Notre serveur Discord"
+      },
+      de: {
+        home: "Startseite",
+        live: "Live-Flug",
+        fleet: "Flotte",
+        about: "Über uns",
+        contact: "Kontakt",
+        apply: "Ich bewerbe mich",
+        welcome: "Willkommen bei Condor Virtual",
+        description: "Ihr Tor zur virtuellen Luftfahrt-Exzellenz.",
+        news_title: "Neuigkeiten der Woche",
+        news_items: [
+          "Neuer Spezialflug nach New York hinzugefügt.",
+          "Aktualisiertes Airbus A320 Modell mit neuen Texturen.",
+          "Anmeldung für die Sommersaison geöffnet.",
+          "Neue Echtzeit-Wetterfunktion aktiviert."
+        ],
+        discord_title: "Unser Discord Server"
+      }
+    };
+
+    function updateLanguage(lang) {
+      localStorage.setItem("preferredLang", lang);
+
+      // Traduction textes simples
+      document.querySelectorAll("[data-translate]").forEach(el => {
+        const key = el.getAttribute("data-translate");
+        if (translations[lang] && translations[lang][key]) {
+          el.textContent = translations[lang][key];
+        }
+      });
+
+      // Mettre à jour la liste des nouveautés
+      const newsList = document.getElementById('news-list');
+      newsList.innerHTML = ""; // clear old news
+      if (translations[lang] && translations[lang].news_items) {
+        translations[lang].news_items.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          newsList.appendChild(li);
+        });
+      }
+
+      // Gestion du style sélection langue
+      document.querySelectorAll(".lang-flags img").forEach(i => i.classList.remove("selected"));
+      const selectedImg = document.querySelector(`.lang-flags img[data-lang="${lang}"]`);
+      if (selectedImg) selectedImg.classList.add("selected");
+    }
+
+    document.querySelectorAll(".lang-flags img").forEach(img => {
+      img.addEventListener("click", () => {
+        const lang = img.getAttribute("data-lang");
+        updateLanguage(lang);
+      });
+    });
+
+    // Set default language
+    const savedLang = localStorage.getItem("preferredLang") || 'en';
+    updateLanguage(savedLang);
+
+    // Mise à jour hauteur navbar
+    function updateNavbarHeight() {
+      const navbar = document.querySelector('.navbar');
+      const height = navbar.offsetHeight;
+      document.documentElement.style.setProperty('--navbar-height', height + 'px');
+    }
+    window.addEventListener('resize', updateNavbarHeight);
+    window.addEventListener('load', updateNavbarHeight);
+
+  </script>
+</body>
+</html>
